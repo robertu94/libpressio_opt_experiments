@@ -16,7 +16,7 @@ def main(args):
                 if writer is None:
                     if last:
                         fieldnames = set(last.keys())
-                        writer = csv.DictWriter(args.outfile, fieldnames=fieldnames)
+                        writer = csv.DictWriter(args.outfile, fieldnames=sorted(fieldnames))
                         writer.writeheader()
                         writer.writerow(last)
                 else:

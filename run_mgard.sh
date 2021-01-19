@@ -45,7 +45,7 @@ dataloads=(
 
 for dataload in "${dataloads[@]}"
 do
-  for tolerance in $(seq 20 10 60)
+  for tolerance in $(seq 60 10 100)
   do
 
     read -d '' script <<EOF

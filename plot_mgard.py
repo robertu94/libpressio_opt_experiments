@@ -3,6 +3,7 @@
 import seaborn as sns
 import pandas as pd
 import matplotlib
+from pathlib import Path
 from matplotlib.ticker import FormatStrFormatter
 import argparse
 
@@ -18,10 +19,13 @@ def setup():
 
 def prepare_data(data):
     data['time:compress'] = data['time:compress']/1000.0
-    data['filename'] = data['filename'].map(lambda x: x.split('_')[-1].split('.')[0])
+    #data['filename'] = data['filename'].map(lambda x: x.split('_')[-1].split('.')[0])
+    data['filename'] = data['filename'].map( lambda x: str(Path(x).stem).replace('_','-'))
     data['compression ratio'] = data['size:compression_ratio']
     data['psnr'] = data['error_stat:psnr']
-    return data
+    data = data[data['tolerance'] >=30]
+    data = data[data['tolerance'] <=90]
+    return data.sort_values("tolerance")
 
 def compresion_time(data):
     g = sns.catplot(data=data, y="time:compress", x="tolerance", hue="config", col="filename", kind="bar", sharey=True)
