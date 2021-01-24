@@ -32,7 +32,7 @@ def setup():
 args = parse_args()
 setup()
 df = prepare_data(args)
-g = sns.catplot(x="tolerance", y="Compression Time", hue="config", col="filename", data=df, kind="bar")
+g = sns.catplot(x="tolerance", y="Compression Time",  hue="filename", data=df, kind="bar")
 ax: matplotlib.axes._subplots
 for ax in g.axes[0]:
     ax.set_xticks(range(3))
