@@ -82,7 +82,7 @@ def array_args(arg: str, values: List[Any], early=False) -> List[str]:
 
 
 def build_pressio(args):
-    DATALOAD = ['-i', str(Path.home() / 'git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32'),
+    DATALOAD = ['-i', '/zfs/fthpc/common/sdrbench/hurricane/CLOUDf48.bin',
                 '-d', '100', '-d', '500', '-d', '500', '-t', 'float']
     SHOW_ARGS = ["-O", "all"] if args.show_args else []
 
@@ -101,11 +101,11 @@ def build_pressio(args):
         "-o", "/pressio:opt:objective_mode_name=max",
         "-o", "/pressio/sz/composite/spatial_error:spatial_error:threshold=1e-4",
         "-o", "/pressio/composite/spatial_error:spatial_error:threshold=1e-4",
-        *array_args("/pressio/dist_gridsearch:dist_gridsearch:num_bins", [1000]),
+        *array_args("/pressio/dist_gridsearch:dist_gridsearch:num_bins", [args.nbins]),
         *array_args("/pressio/dist_gridsearch:dist_gridsearch:overlap_percentage",
                     [.1]),
         *array_args("/pressio/dist_gridsearch:opt:lower_bound", [1e-18]),
-        *array_args("/pressio/dist_gridsearch:opt:upper_bound", [1e-15]),
+        *array_args("/pressio/dist_gridsearch:opt:upper_bound", [1e-12]),
         *array_args("/pressio:opt:inputs", ["/pressio/sz:sz:abs_err_bound"]),
         *array_args("/pressio:opt:output",
                     ["/pressio/sz/composite:composite:objective",
@@ -139,6 +139,7 @@ def parse_args():
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--no_parallel", action="store_false", dest="parallel")
     parser.add_argument("--n_proc", type=int)
+    parser.add_argument("--nbins", type=int)
     return parser.parse_args()
 
 

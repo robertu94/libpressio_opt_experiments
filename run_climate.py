@@ -4,6 +4,8 @@ from pathlib import Path
 from pprint import pprint
 import subprocess as sp
 import argparse
+import os
+from pathlib import Path
 
 
 parameters = ['size:size:compression_ratio', 'error_stat:error_stat:psnr',
@@ -82,7 +84,7 @@ def array_args(arg: str, values: List[Any], early=False) -> List[str]:
 
 
 def build_pressio(args):
-    DATALOAD = ['-i', str(Path.home() / 'git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32'),
+    DATALOAD = ['-i', '/zfs/fthpc/common/sdrbench/hurricane/CLOUDf48.bin',
                 '-d', '100', '-d', '500', '-d', '500', '-t', 'float']
     SHOW_ARGS = ["-O", "all"] if args.show_args else []
 
@@ -97,13 +99,13 @@ def build_pressio(args):
         "-b", "/pressio/guess_first/dist_gridsearch:dist_gridsearch:search=fraz",
 
         "-o", "/pressio/guess_first/dist_gridsearch/fraz:opt:local_rel_tolerance=10",
-        "-o", "/pressio/guess_first:opt:target=60",
+        "-o", f"/pressio/guess_first:opt:target={args.target or 60}",
         "-o", "/pressio/guess_first:opt:global_rel_tolerance=.1",
         "-o", "/pressio/sz:sz:error_bound_mode_str=abs",
         "-o", "/pressio:opt:objective_mode_name=max",
         "-o", "/pressio/composite/spatial_error:spatial_error:threshold=1e-4",
         *array_args("/pressio/guess_first:opt:prediction", [1e-6]),
-        *array_args("/pressio/guess_first/dist_gridsearch:dist_gridsearch:num_bins", [12]),
+        *array_args("/pressio/guess_first/dist_gridsearch:dist_gridsearch:num_bins", [155]),
         *array_args("/pressio/guess_first/dist_gridsearch:dist_gridsearch:overlap_percentage",
                     [.1]),
         *array_args("/pressio/guess_first/dist_gridsearch:opt:lower_bound", [1e-18]),
@@ -124,10 +126,13 @@ def build_pressio(args):
     if args.debug:
         cmd_args = ["konsole", '-e', "gdb", "-x", "debug.gdb", "--args"] + cmd_args
     if args.parallel:
-        cmd_args.insert(0, "mpiexec")
+        cmd_args.insert(0, str(Path.home() / "projects/libpressio_opt_experiments/.spack-env/view/bin/mpiexec"))
         if args.n_proc:
             cmd_args.insert(1, "-np")
             cmd_args.insert(2, str(args.n_proc))
+        if "PBS_NODEFILE" in os.environ:
+            cmd_args.insert(1, "--hostfile")
+            cmd_args.insert(2, os.environ['PBS_NODEFILE'])
 
     cmd_args.append("opt")
     return cmd_args
@@ -141,6 +146,7 @@ def parse_args():
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--no_parallel", action="store_false", dest="parallel")
     parser.add_argument("--n_proc", type=int)
+    parser.add_argument("--target", type=float)
     return parser.parse_args()
 
 

@@ -4,7 +4,7 @@
 #PBS -M robertu@clemson.edu
 #PBS -m abe
 #PBS -j oe
-#PBS -N run_mgard
+#PBS -N run_mgard_noearly
 
 cd ~/projects/libpressio_opt_experiments/
 source ~/git/spack/share/spack/setup-env.sh
@@ -48,9 +48,9 @@ echo "done preparing"
 
 dataloads=(
 "-i /zfs/fthpc/common/sdrbench/hurricane/CLOUDf48.bin -t float  -d 500 -d 500 -d 100"
-#"-i /zfs/fthpc/common/sdrbench/SDRBENCH-Miranda-256x384x384/pressure.d64 -t double -d 384 -d 384 -d 256"
-#"-i /zfs/fthpc/common/sdrbench/nyx/baryon_density.dat-log -t float -d 512 -d 512 -d 512"
-#"-i /zfs/fthpc/common/sdrbench/SCALE_98x1200x1200/V-98x1200x1200.dat -t float -d 1200 -d 1200 -d 98"
+"-i /zfs/fthpc/common/sdrbench/SDRBENCH-Miranda-256x384x384/pressure.d64 -t double -d 384 -d 384 -d 256"
+"-i /zfs/fthpc/common/sdrbench/nyx/baryon_density.dat-log -t float -d 512 -d 512 -d 512"
+"-i /zfs/fthpc/common/sdrbench/SCALE_98x1200x1200/V-98x1200x1200.dat -t float -d 1200 -d 1200 -d 98"
 )
 
 #where you have no idea
@@ -93,7 +93,7 @@ do
 	dataload="${dataloads[${dataload_idx}]}"
 	lower_bound="${lower_bounds[${dataload_idx}]}"
 	upper_bound="${upper_bounds[${dataload_idx}]}"
-  for tolerance in $(seq 60 10 90)
+  for tolerance in $(seq 30 10 50)
   do
     echo "$dataload" "tolerance=$tolerance" "sz+psnr"
 
@@ -113,7 +113,6 @@ EOF
 result="$(pressio -M all -m time -m size -m error_stat $dataload -o composite:scripts="$szobjective" -o sz:error_bound_mode_str=psnr -o sz:psnr_err_bound=$tolerance  sz 2>&1)"
 targetcr=$(echo -e "$result"| grep compression_ratio | cut -d= -f2 | cut -f2 -d' ')
 echo -e "$result"
-echo debug:targetcr=$targetcr
 
 
     read -d '' script <<EOF
@@ -164,7 +163,6 @@ $MPIEXEC pressio -Q  -M all \
        -b "/pressio/sz/composite:composite:names=error_stat" \
        -o "/pressio/sz/composite:composite:scripts=$script" \
        -o "/pressio/dist_gridsearch/fraz:opt:local_rel_tolerance=10" \
-       -o "/pressio/dist_gridsearch:opt:target=$targetcr" \
        -o "/pressio/dist_gridsearch:dist_gridsearch:num_bins=12" \
        -o "/pressio/dist_gridsearch:dist_gridsearch:overlap_percentage=.1" \
        -o "/pressio/dist_gridsearch:opt:lower_bound=${lower_bound}" \
@@ -266,7 +264,6 @@ $MPIEXEC pressio -Q  -M all \
        -b "/pressio/zfp/composite:composite:names=error_stat" \
        -o "/pressio/zfp/composite:composite:scripts=$script4" \
        -o "/pressio/dist_gridsearch/fraz:opt:local_rel_tolerance=10" \
-       -o "/pressio/dist_gridsearch:opt:target=$targetcr" \
        -o "/pressio/dist_gridsearch:dist_gridsearch:num_bins=12" \
        -o "/pressio/dist_gridsearch:dist_gridsearch:overlap_percentage=.1" \
        -o "/pressio/dist_gridsearch:opt:lower_bound=${lower_bound}" \
